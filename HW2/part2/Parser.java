@@ -53,71 +53,156 @@ public class Parser {
 
     // statement_list ::= {statement}
     private void statement_list() {
-    	statement()
+    	statement();
     }
 
     // statement ::= assignment | print | do | if
     private void statement() {
-    	// complete function
+    	if (is(TK.ID) || is (TK.TILDE))
+    	{
+    		assignment();
+    	}
+
+    	else if (is (TK.PRINT))
+    	{
+    		print();
+    	}
+
+    	else if (is (TK.DO))
+    	{
+    		Do();
+    	}
+
+    	else if (is (TK.IF))
+    	{
+    		If();
+    	}
+
+    	else {
+    		System.err.println("statement error");
+    		System.exit(1);
+    	}
     }
 
     // assignment ::= ref_id ’=’ expr
     private void assignment() {
-    	//complete function
+    	ref_id();
+    	mustbe(TK.ASSIGN);
+    	expr();
     }
 
     //  print ::= ’!’ expr
     private void print() {
-    	//complete function
+    	mustbe(TK.PRINT);
+    	expr();
     }
 
    // do ::= ’<’ guarded_command ’>’
-    private void do() {
-    	//complete function
+    private void Do() {
+    	scan();
+    	guarded_command();
+    	mustbe(TK.ENDDO);
     }
 
-    // if ::= ’[’ guarded_command { ’|’ guarded_command }
-    private void if () {
-    	//complete function
+    // if ::= ’[’ guarded_command { ’|’ guarded_command } [ ’%’ block ] ’]’
+    private void If () {
+    	scan();
+    	guarded_command();
+
+    	while (is(TK.ELSEIF))
+    	{
+    		scan();
+    		guarded_command();
+    	}
+
+    	if (is(TK.ELSE))
+    	{
+    		scan();
+    		block();
+    	}
+
+    	mustbe(TK.ENDIF);
     }
 
     // ref_id ::= [ ’ ̃’ [ number ] ] id
     private void ref_id () {
-    	//complete function
+    	if (is(TK.TILDE))
+    	{
+    		scan();
 
+    		if (is(TK.NUM))
+    		{
+    			scan();
+    		}
+    	}
+    	mustbe(TK.ID);
     }
 
     //   expr ::= term { addop term }
     private void expr () {
-    	//complete function
+    	term();
 
+    	while (addop())
+    	{
+    		term();
+    	}
     }
 
     //  guarded_command ::= expr ’:’ block
     private void guarded_command () {
-    	//complete function
+    	expr();
+    	mustbe(TK.THEN);
+    	block();
     }
 
     // term ::= factor { multop factor }
     private void term () {
-    	// complete function
+    	factor();
 
+    	while (multop())
+    	{
+    		factor();
+    	}
     }
 
     // factor ::= ’(’ expr ’)’ | ref_id | number
     private void factor () {
-    	//complete function
+    	if (is(TK.LPAREN))
+    	{
+    		scan();
+    		expr();
+    		mustbe(TK.RPAREN);
+    	}
+    	else if (is(TK.TILDE) || is(TK.ID))
+    	{
+    		ref_id();
+    	}
+
+    	else 
+    	{
+    		mustbe(TK.NUM);
+    	}
+
+    }
+    // addop ::= ’+’ | ’-’
+    private boolean addop() {
+    	if (is(TK.PLUS) || is(TK.TIMES))
+    	{
+    		scan();
+    		return true;
+    	}
+    	return false;
 
     }
 
-    private void addop() {
-    	//complete function
-
-    }
-
-    private void multop() {
-    	//complete function 
-    	
+    // multop ::= ’*’ | ’/’
+    private boolean multop() {
+    	if (is(TK.TIMES) || is(TK.DIVIDE))
+    	{
+    		scan();
+    		return true;
+    	}
+    	return false;
     }
 
     // is current token what we want?
