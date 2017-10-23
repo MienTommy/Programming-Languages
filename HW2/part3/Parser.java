@@ -1,4 +1,5 @@
 /* *** This file is given as part of the programming assignment. *** */
+import java.util.* ;
 
 public class Parser {
 
@@ -6,13 +7,16 @@ public class Parser {
     // tok is global to all these parsing methods;
     // scan just calls the scanner's scan method and saves the result in tok.
     private Token tok; // the current token
+    private Scan scanner;
+    private ArrayList<ArrayList<String>> symbolTable; // symbolTalbe is an arrayList of arrayLists
+
     private void scan() {
     tok = scanner.scan();
     }
 
-    private Scan scanner;
     Parser(Scan scanner) {
     this.scanner = scanner;
+    symbolTable = new ArrayList<ArrayList<String>>(); // Initiliazing symbol table
     scan();
     program();
     if( tok.kind != TK.EOF )
@@ -26,8 +30,13 @@ public class Parser {
 
     // block ::= declaration_list statement_list
     private void block(){
+    ArrayList<String> scope = new ArrayList<String>(); // new scope upon entering block
+    symbolTable.add(scope);
+    
     declaration_list();
     statement_list();
+
+    symbolTable.remove(symbolTable.size() - 1); // removing scope upon exiting block
     }
 
     // declaration_list ::= {declaration}
@@ -43,11 +52,41 @@ public class Parser {
 
     // declaration ::= ’@’ id { ’,’ id }
     private void declaration() {
-    mustbe(TK.DECLARE);
-    mustbe(TK.ID);
-    while( is(TK.COMMA) ) {
-        scan();
+        mustbe(TK.DECLARE);
+        // Loop through the array list to check if token string is already declared.
+        if ( is(TK.ID) )
+        {
+            // getting the current scope (arrayList) of the symbolTable 
+            ArrayList<String> currentScope = symbolTable.get(symbolTable.size() - 1 );
+            if (currentScope.contains(tok.string))
+            {
+                System.err.println("redeclaration of variable " + tok.string);
+            }
+
+            else
+            {
+                currentScope.add(tok.string);
+            }
+        } 
         mustbe(TK.ID);
+        while( is(TK.COMMA) )
+        {
+            scan();
+                if ( is(TK.ID) )
+                {
+                    // getting the current scope (arrayList) of the symbolTable 
+                    ArrayList<String> currentScope = symbolTable.get(symbolTable.size() - 1 );
+                    if (currentScope.contains(tok.string))
+                    {
+                        System.err.println("redeclaration of variable " + tok.string);
+                    }
+
+                    else
+                    {
+                        currentScope.add(tok.string);
+                    }
+                } 
+            mustbe(TK.ID);
         }
     }
 
